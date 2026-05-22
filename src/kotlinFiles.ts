@@ -9,7 +9,7 @@ export const kotlinFiles: Record<string, KotlinFile> = {
   models: {
     name: "StyleModels.kt",
     path: "domain/model/StyleModels.kt",
-    description: "Domain-level safe enums and structured models for visualization requests, removing free-text prompts for security.",
+    description: "Domain-level safe enums and structured models for style evaluations & the new 'Should I buy this?' purchase-readiness checkers.",
     code: `package com.example.styleai.domain.model
 
 enum class AppLanguage { EN, RU }
@@ -37,13 +37,29 @@ data class VisualizationRequest(
     }
 }
 
-data class UserConsentState(
-    val hasPhotoPermission: Boolean = false,
-    val understandsDisclaimer: Boolean = false,
-    val rawPhotosNotStored: Boolean = false
-) {
-    val isFullyConsented: Boolean get() = hasPhotoPermission && understandsDisclaimer && rawPhotosNotStored
-}`
+enum class ClothingCategory {
+    TOP, BOTTOM, DRESS, OUTERWEAR, SHOES, BAG, ACCESSORY
+}
+
+enum class ShoppingVerdict {
+    GOOD_MATCH, MAYBE, SKIP
+}
+
+data class ShoppingCheckRequest(
+    val reportId: String,
+    val category: ClothingCategory,
+    val localPhotoUri: String? = null
+)
+
+data class ShoppingCheckResult(
+    val verdict: ShoppingVerdict,
+    val explanationColor: String,
+    val explanationSilhouette: String,
+    val explanationCapsule: String,
+    val explanationVersatility: String,
+    val outfitCountEstimate: String,
+    val shoppingAdvice: String
+)`
   },
   localization: {
     name: "AppLocalization.kt",

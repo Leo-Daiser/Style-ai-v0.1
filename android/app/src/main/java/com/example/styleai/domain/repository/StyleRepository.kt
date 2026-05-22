@@ -25,8 +25,11 @@ interface StyleRepository {
     fun getHistory(): Flow<List<HistoryItem>>
     suspend fun deleteHistoryItem(id: String)
     suspend fun clearAllLocalData()
+    suspend fun clearStyleData()
+    suspend fun resetOnboarding()
 
     fun getOutfitIdeas(occasion: String?, style: String?, season: String?): Flow<List<OutfitIdea>>
+    suspend fun addGeneratedOutfitIdea(idea: OutfitIdea)
     fun getSavedLooks(): Flow<List<SavedLook>>
     suspend fun toggleSaveLook(outfitId: String)
     suspend fun deleteSavedLook(id: String)

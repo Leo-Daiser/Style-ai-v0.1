@@ -218,3 +218,39 @@ data class HistoryItem(
     val paletteName: String,
     val numSavedLooks: Int
 )
+
+/**
+ * Categories of clothing garments supporting custom style index lookups.
+ */
+enum class ClothingCategory {
+    TOP, BOTTOM, DRESS, OUTERWEAR, SHOES, BAG, ACCESSORY
+}
+
+/**
+ * Simple match verdict categories for style checklist checking.
+ */
+enum class ShoppingVerdict {
+    GOOD_MATCH, MAYBE, SKIP
+}
+
+/**
+ * Model class for item purchase queries.
+ */
+data class ShoppingCheckRequest(
+    val reportId: String,
+    val category: ClothingCategory,
+    val localPhotoUri: String? = null
+)
+
+/**
+ * Custom result model structured precisely for connection to backends.
+ */
+data class ShoppingCheckResult(
+    val verdict: ShoppingVerdict,
+    val explanationColor: String,
+    val explanationSilhouette: String,
+    val explanationCapsule: String,
+    val explanationVersatility: String,
+    val outfitCountEstimate: String,
+    val shoppingAdvice: String
+)

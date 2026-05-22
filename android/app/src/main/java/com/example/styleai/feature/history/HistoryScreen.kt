@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.styleai.domain.model.HistoryItem
 import com.example.styleai.domain.model.SavedLook
+import com.example.styleai.domain.model.AppLanguage
+import com.example.styleai.core.localization.AppLocalization
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,7 +27,9 @@ fun HistoryScreen(
 ) {
     val histories by viewModel.historyItems.collectAsState()
     val looks by viewModel.savedLooks.collectAsState()
+    val currentLanguage by viewModel.selectedLanguage.collectAsState()
 
+    val strings = AppLocalization.getStrings(currentLanguage)
     var activeTabIdx by remember { mutableStateOf(0) }
 
     Column(
@@ -34,12 +39,12 @@ fun HistoryScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = "Your Local Cache History",
+            text = strings.historyTitle,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "Cached data stored on device. Raw imagery is skipped in logs.",
+            text = strings.historySubtitle,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -48,10 +53,20 @@ fun HistoryScreen(
         // Custom local Tab Indicator
         TabRow(selectedTabIndex = activeTabIdx) {
             Tab(selected = activeTabIdx == 0, onClick = { activeTabIdx = 0 }) {
-                Text("Saved Reports (${histories.size})", modifier = Modifier.padding(vertical = 12.dp), fontSize = 13.sp)
+                Text(
+                    text = "${strings.historyActiveReports} (${histories.size})",
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    fontSize = 11.sp,
+                    fontWeight = if (activeTabIdx == 0) FontWeight.Bold else FontWeight.Normal
+                )
             }
             Tab(selected = activeTabIdx == 1, onClick = { activeTabIdx = 1 }) {
-                Text("Saved Looks (${looks.size})", modifier = Modifier.padding(vertical = 12.dp), fontSize = 13.sp)
+                Text(
+                    text = "${strings.historySavedLooks} (${looks.size})",
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    fontSize = 11.sp,
+                    fontWeight = if (activeTabIdx == 1) FontWeight.Bold else FontWeight.Normal
+                )
             }
         }
 
@@ -60,18 +75,24 @@ fun HistoryScreen(
         if (activeTabIdx == 0) {
             if (histories.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("No saved reports found. Create one by scanning your profile details.", textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Color.Gray)
+                    Text(
+                        text = strings.historyEmptyState,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(histories) { historyItem ->
+                    items(histories, key = { it.id }) { historyItem ->
                         HistoryItemCard(
                             item = historyItem,
                             onLoadReport = onNavigateBackToReport,
-                            onDelete = { viewModel.deleteHistoryItem(historyItem.id) }
+                            onDelete = { viewModel.deleteHistoryItem(historyItem.id) },
+                            currentLanguage = currentLanguage
                         )
                     }
                 }
@@ -79,14 +100,24 @@ fun HistoryScreen(
         } else {
             if (looks.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("No saved looks yet. Highlight looks in visualization grids to check them out here.", textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Color.Gray)
+                    val noSavedLooksMsg = if (currentLanguage == AppLanguage.EN) {
+                        "No saved looks yet. Highlight looks in visualization grids to check them out here."
+                    } else {
+                        "Сохраненные образы отсутствуют. Выберите образы на вкладке стилизации."
+                    }
+                    Text(
+                        text = noSavedLooksMsg,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(looks) { savedLook ->
+                    items(looks, key = { it.id }) { savedLook ->
                         SavedLookItemCard(
                             look = savedLook,
                             onDelete = { viewModel.removeSavedLook(savedLook.id) }
@@ -102,7 +133,8 @@ fun HistoryScreen(
 fun HistoryItemCard(
     item: HistoryItem,
     onLoadReport: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    currentLanguage: AppLanguage
 ) {
     val formatter = SimpleDateFormat("MMM dd, yyyy • HH:mm", Locale.getDefault())
     val dateString = formatter.format(Date(item.date))
@@ -117,26 +149,49 @@ fun HistoryItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(item.reportTitle, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = if (currentLanguage == AppLanguage.EN) "Style Report" else "Отчет по стилю",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyLarge
+                )
                 TextButton(onClick = onDelete) {
-                    Text("Delete", color = Color(0xFFC76B6B), fontSize = 11.sp)
+                    Text(
+                        text = if (currentLanguage == AppLanguage.EN) "Delete" else "Удалить",
+                        color = Color(0xFFC76B6B),
+                        fontSize = 11.sp
+                    )
                 }
             }
-            Text("Date: $dateString", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            Text("Assigned Color season: ${item.paletteName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Text(
+                text = "${if (currentLanguage == AppLanguage.EN) "Date" else "Дата"}: $dateString",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            Text(
+                text = "${if (currentLanguage == AppLanguage.EN) "Color Palette" else "Палитра"}: ${item.paletteName}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Saved Looks inside: ${item.numSavedLooks}", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+                Text(
+                    text = "${if (currentLanguage == AppLanguage.EN) "Saved Looks" else "Сохранено образов"}: ${item.numSavedLooks}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.DarkGray
+                )
                 Button(
                     onClick = onLoadReport,
                     modifier = Modifier.height(30.dp),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
                 ) {
-                    Text("Load Report", fontSize = 10.sp)
+                    Text(
+                        text = if (currentLanguage == AppLanguage.EN) "Load Report" else "Загрузить",
+                        fontSize = 10.sp
+                    )
                 }
             }
         }

@@ -3,6 +3,7 @@ package com.example.styleai.data.remote
 import com.example.styleai.domain.model.CreditBalance
 import com.example.styleai.domain.model.PhotoValidationResult
 import com.example.styleai.domain.model.StyleReport
+import com.example.styleai.domain.model.VisualizationRequest
 
 /**
  * Interface detailing future secure backend endpoints.
@@ -60,24 +61,23 @@ interface RemoteStyleApi {
     suspend fun deleteServerData(): Boolean
 }
 
+enum class StylePrefFit {
+    BALANCED,
+    LOOSE,
+    FITTED
+}
+
 // Request & Response Data Models
 data class StyleAnalysisRequest(
     val selfieImageUrl: String,
     val fullBodyImageUrl: String,
-    val userStylePrefNotes: String
+    val preferredFit: StylePrefFit = StylePrefFit.BALANCED
 )
 
 data class PhotoMetadata(
     val key: String,
     val size: Long,
     val mimeType: String
-)
-
-data class VisualizationRequest(
-    val reportId: String,
-    val occasion: String,
-    val style: String,
-    val season: String
 )
 
 data class VisualizationResponse(

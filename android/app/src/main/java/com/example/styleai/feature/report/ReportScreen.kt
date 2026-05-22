@@ -13,17 +13,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.styleai.domain.model.*
+import com.example.styleai.core.localization.AppLocalization
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun ReportScreen(
     reportState: StateFlow<StyleReport?>,
+    selectedLanguage: StateFlow<AppLanguage>,
     onToggleGapCompleted: (String) -> Unit
 ) {
     val report by reportState.collectAsState()
+    val currentLanguage by selectedLanguage.collectAsState()
+    val strings = AppLocalization.getStrings(currentLanguage)
     val scrollState = rememberScrollState()
 
     if (report == null) {
@@ -44,60 +48,64 @@ fun ReportScreen(
     ) {
         // Report Header
         Text(
-            text = "Your Personal Style Report",
-            style = MaterialTheme.typography.displayMedium,
+            text = strings.reportTitle,
+            style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "Refining structure, proportion, and seasonal pigments securely in-memory.",
+            text = if (currentLanguage == AppLanguage.EN) {
+                "Refining structure, proportion, and seasonal pigments securely in-memory."
+            } else {
+                "Анализ структуры, пропорций и сезонного цветотипа выполнен в оперативной памяти."
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 20.dp)
         )
 
         // Section A: Personal Color Palette
-        PaletteSection(palette = activeReport.colorPalette)
+        PaletteSection(palette = activeReport.colorPalette, currentLanguage = currentLanguage, strings = strings)
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // Section B: Best Silhouettes
-        SilhouettesSection(silhouettes = activeReport.silhouettes)
+        SilhouettesSection(silhouettes = activeReport.silhouettes, currentLanguage = currentLanguage, strings = strings)
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // Section C: Style Directions
-        StyleDirectionsSection(directions = activeReport.styleDirections)
+        StyleDirectionsSection(directions = activeReport.styleDirections, strings = strings)
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // Section D: Wardrobe Gaps Checklist
-        GapsChecklistSection(gaps = activeReport.wardrobeGaps, onToggleComplete = onToggleGapCompleted)
+        GapsChecklistSection(gaps = activeReport.wardrobeGaps, onToggleComplete = onToggleGapCompleted, strings = strings)
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // Section E: Prioritized Shopping Checklist
-        ShoppingListSection(items = activeReport.shoppingList)
+        ShoppingListSection(items = activeReport.shoppingList, strings = strings)
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // Section F: What to Avoid (Careful, non-body-shaming language)
-        AvoidSection(avoids = activeReport.whatToAvoid)
+        AvoidSection(avoids = activeReport.whatToAvoid, strings = strings)
 
         Spacer(modifier = Modifier.height(30.dp))
     }
 }
 
 @Composable
-fun PaletteSection(palette: ColorPalette) {
+fun PaletteSection(palette: ColorPalette, currentLanguage: AppLanguage, strings: com.example.styleai.core.localization.AppStrings) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "A. Color Palette: ${palette.name}",
-                style = MaterialTheme.typography.titleLarge,
+                text = "${strings.reportPaletteSection}: ${palette.name}",
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -113,7 +121,7 @@ fun PaletteSection(palette: ColorPalette) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                palette.swatchColors.forEach { hexColor ->
+                palette.swatchColors.take(6).forEach { hexColor ->
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -129,13 +137,15 @@ fun PaletteSection(palette: ColorPalette) {
             // Priorities list
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Prioritize Tone Matches:", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                    val toneMatchesLabel = if (currentLanguage == AppLanguage.EN) "Prioritize Tone Matches:" else "Приоритетные тона:"
+                    Text(text = toneMatchesLabel, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                     palette.priorityColors.forEach { item ->
                         Text("• $item", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Incorporate Carefully:", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                    val carefullyLabel = if (currentLanguage == AppLanguage.EN) "Incorporate Carefully:" else "С осторожностью:"
+                    Text(text = carefullyLabel, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                     palette.avoidColors.forEach { item ->
                         Text("• $item", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 2.dp))
                     }
@@ -146,19 +156,23 @@ fun PaletteSection(palette: ColorPalette) {
 }
 
 @Composable
-fun SilhouettesSection(silhouettes: List<SilhouetteRecommendation>) {
+fun SilhouettesSection(silhouettes: List<SilhouetteRecommendation>, currentLanguage: AppLanguage, strings: com.example.styleai.core.localization.AppStrings) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "B. Recommended Silhouettes",
-                style = MaterialTheme.typography.titleLarge,
+                text = strings.reportSilhouettesSection,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Proportional recommendations suited for balanced geometric alignments:",
+                text = if (currentLanguage == AppLanguage.EN) {
+                    "Proportional recommendations suited for balanced geometric alignments:"
+                } else {
+                    "Пропорциональные рекомендации для сбалансированной геометрии:"
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -188,15 +202,15 @@ fun SilhouettesSection(silhouettes: List<SilhouetteRecommendation>) {
 }
 
 @Composable
-fun StyleDirectionsSection(directions: List<StyleDirection>) {
+fun StyleDirectionsSection(directions: List<StyleDirection>, strings: com.example.styleai.core.localization.AppStrings) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "C. Style Direction Suggestions",
-                style = MaterialTheme.typography.titleLarge,
+                text = strings.reportDirectionsSection,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -207,7 +221,7 @@ fun StyleDirectionsSection(directions: List<StyleDirection>) {
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(direction.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                        Text(direction.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(direction.description, style = MaterialTheme.typography.bodySmall)
                         Spacer(modifier = Modifier.height(8.dp))
@@ -222,15 +236,15 @@ fun StyleDirectionsSection(directions: List<StyleDirection>) {
 }
 
 @Composable
-fun GapsChecklistSection(gaps: List<WardrobeGap>, onToggleComplete: (String) -> Unit) {
+fun GapsChecklistSection(gaps: List<WardrobeGap>, onToggleComplete: (String) -> Unit, strings: com.example.styleai.core.localization.AppStrings) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "D. Wardrobe Gaps Checklist",
-                style = MaterialTheme.typography.titleLarge,
+                text = strings.reportGapsSection,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -260,15 +274,15 @@ fun GapsChecklistSection(gaps: List<WardrobeGap>, onToggleComplete: (String) -> 
 }
 
 @Composable
-fun ShoppingListSection(items: List<ShoppingItem>) {
+fun ShoppingListSection(items: List<ShoppingItem>, strings: com.example.styleai.core.localization.AppStrings) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "E. Prioritized Shopping List",
-                style = MaterialTheme.typography.titleLarge,
+                text = strings.reportShoppingSection,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -288,7 +302,9 @@ fun ShoppingListSection(items: List<ShoppingItem>) {
                         fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
             }
@@ -297,20 +313,20 @@ fun ShoppingListSection(items: List<ShoppingItem>) {
 }
 
 @Composable
-fun AvoidSection(avoids: List<String>) {
+fun AvoidSection(avoids: List<String>, strings: com.example.styleai.core.localization.AppStrings) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "F. What to Avoid (Styling Guides)",
-                style = MaterialTheme.typography.titleLarge,
+                text = strings.reportAvoidSection,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             Text(
-                text = "StyleAI uses safe alignments to maximize ease of matching without body shaming or referencing body weight.",
+                text = strings.reportBodySafetyNotice,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                 modifier = Modifier.padding(vertical = 4.dp)

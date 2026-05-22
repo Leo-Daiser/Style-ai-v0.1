@@ -24,6 +24,9 @@ class UploadViewModel(
     private val _selfiePhoto = MutableStateFlow<UploadedPhoto?>(null)
     val selfiePhoto: StateFlow<UploadedPhoto?> = _selfiePhoto.asStateFlow()
 
+    val selectedLanguage: StateFlow<AppLanguage> = styleRepository.getSelectedLanguage()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppLanguage.EN)
+
     private val _fullBodyPhoto = MutableStateFlow<UploadedPhoto?>(null)
     val fullBodyPhoto: StateFlow<UploadedPhoto?> = _fullBodyPhoto.asStateFlow()
 

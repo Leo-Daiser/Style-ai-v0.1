@@ -8,9 +8,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-class BillingRepositoryImpl : BillingRepository {
+class BillingRepositoryImpl(private val context: android.content.Context? = null) : BillingRepository {
 
-    private val balance = MutableStateFlow(CreditBalance(totalCredits = 3, isProUser = false))
+    private val prefs by lazy {
+        context?.getSharedPreferences("styleai_prefs", android.content.Context.MODE_PRIVATE)
+    }
+
+    private val balance = MutableStateFlow(
+        CreditBalance(
+            totalCredits = prefs?.getInt("mock_credits", 3) ?: 3,
+            isProUser = prefs?.getBoolean("is_pro_user", false) ?: false
+        )
+    )
 
     override fun getCreditBalance(): Flow<CreditBalance> = balance
 
@@ -23,15 +32,35 @@ class BillingRepositoryImpl : BillingRepository {
         val plan = getPurchasePlans().find { it.id == planId } ?: return false
         
         balance.update { current ->
-            when (planId) {
+            val next = when (planId) {
                 "plan_free" -> current
-                "plan_full_report" -> current.copy(isProUser = true)
-                "plan_pro_sub" -> current.copy(isProUser = true, totalCredits = current.totalCredits + 50)
-                "pack_10" -> current.copy(totalCredits = current.totalCredits + 10)
-                "pack_30" -> current.copy(totalCredits = current.totalCredits + 30)
-                "pack_100" -> current.copy(totalCredits = current.totalCredits + 100)
+                "plan_full_report" -> {
+                    prefs?.edit()?.putBoolean("is_report_unlocked", true)?.apply()
+                    current
+                }
+                "plan_pro_sub" -> {
+                    val nextCredits = current.totalCredits + 30
+                    prefs?.edit()?.putBoolean("is_pro_user", true)?.putInt("mock_credits", nextCredits)?.apply()
+                    current.copy(isProUser = true, totalCredits = nextCredits)
+                }
+                "pack_10" -> {
+                    val nextCredits = current.totalCredits + 10
+                    prefs?.edit()?.putInt("mock_credits", nextCredits)?.apply()
+                    current.copy(totalCredits = nextCredits)
+                }
+                "pack_30" -> {
+                    val nextCredits = current.totalCredits + 30
+                    prefs?.edit()?.putInt("mock_credits", nextCredits)?.apply()
+                    current.copy(totalCredits = nextCredits)
+                }
+                "pack_100" -> {
+                    val nextCredits = current.totalCredits + 100
+                    prefs?.edit()?.putInt("mock_credits", nextCredits)?.apply()
+                    current.copy(totalCredits = nextCredits)
+                }
                 else -> current
             }
+            next
         }
         return true
     }
@@ -39,9 +68,11 @@ class BillingRepositoryImpl : BillingRepository {
     override suspend fun useCredit(amount: Int): Boolean {
         var success = false
         balance.update { current ->
-            if (current.isProUser || current.totalCredits >= amount) {
+            if (current.totalCredits >= amount) {
                 success = true
-                if (current.isProUser) current else current.copy(totalCredits = current.totalCredits - amount)
+                val nextCredits = current.totalCredits - amount
+                prefs?.edit()?.putInt("mock_credits", nextCredits)?.apply()
+                current.copy(totalCredits = nextCredits)
             } else {
                 success = false
                 current
@@ -52,7 +83,9 @@ class BillingRepositoryImpl : BillingRepository {
 
     override suspend fun refundCredit(amount: Int) {
         balance.update { current ->
-            if (current.isProUser) current else current.copy(totalCredits = current.totalCredits + amount)
+            val nextCredits = current.totalCredits + amount
+            prefs?.edit()?.putInt("mock_credits", nextCredits)?.apply()
+            current.copy(totalCredits = nextCredits)
         }
     }
 }

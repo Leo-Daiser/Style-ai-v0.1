@@ -18,6 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.styleai.domain.model.UploadedPhoto
+import com.example.styleai.domain.model.AppLanguage
+import com.example.styleai.core.theme.SoftMoss
+import com.example.styleai.core.localization.AppLocalization
 
 @Composable
 fun UploadScreen(
@@ -27,7 +31,9 @@ fun UploadScreen(
     val selfie by viewModel.selfiePhoto.collectAsState()
     val fullBody by viewModel.fullBodyPhoto.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val currentLanguage by viewModel.selectedLanguage.collectAsState()
 
+    val strings = AppLocalization.getStrings(currentLanguage)
     val scrollState = rememberScrollState()
 
     LaunchedEffect(uiState) {
@@ -41,8 +47,17 @@ fun UploadScreen(
             is UploadUiState.Analyzing -> {
                 AnalysisProgressView(
                     stepIndex = state.stepIndex,
-                    stepText = state.currentStep,
-                    percentage = state.percentage
+                    stepText = when(state.stepIndex) {
+                        0 -> strings.loadingStep1
+                        1 -> strings.loadingStep2
+                        2 -> strings.loadingStep3
+                        3 -> strings.loadingStep4
+                        4 -> strings.loadingStep5
+                        5 -> strings.loadingStep6
+                        else -> strings.loadingStep6
+                    },
+                    percentage = state.percentage,
+                    currentLanguage = currentLanguage
                 )
             }
             else -> {
@@ -54,14 +69,14 @@ fun UploadScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Upload Styling Photos",
+                        text = strings.uploadTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.Start)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Your private facial outline and body silhouette help StyleAI detect palette seasons and shoulder-contour alignments.",
+                        text = strings.uploadSubtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.align(Alignment.Start)
@@ -75,14 +90,24 @@ fun UploadScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Guidelines for Accurate Results:", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                text = if (currentLanguage == AppLanguage.EN) "Guidelines for Accurate Results:" else "Рекомендации для точных результатов:",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
-                            val instructions = listOf(
+                            val instructions = if (currentLanguage == AppLanguage.EN) listOf(
                                 "● Pure neutral natural lighting (by a window is best)",
                                 "● Neutral facial expression and relaxed flat hands",
                                 "● Exactly one person visible in the framing frame",
                                 "● Absolute safety: no nudity, underwear, or kids",
                                 "● Avoid blurry actions, group templates, or distance filters"
+                            ) else listOf(
+                                "● Естественное нейтральное освещение (лучше у окна)",
+                                "● Нейтральное выражение лица и расслабленные руки",
+                                "● Ровно один человек в кадре",
+                                "● Абсолютная безопасность: без наготы, белья и детей",
+                                "● Избегайте размытых кадров, групповых фото и сильных фильтров"
                             )
                             instructions.forEach { text ->
                                 Text(text, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 1.dp))
@@ -94,22 +119,24 @@ fun UploadScreen(
 
                     // Selfie Image Selection Box
                     PhotoPickerBox(
-                        title = "1. Color Profile Photo (Face/Selfie)",
+                        title = strings.uploadSelfieLabel,
                         uploadedPhoto = selfie,
                         onSelectMockUri = { viewModel.selectSelfie("internal_selfie_good.jpg") },
                         onSelectMockFailureUri = { viewModel.selectSelfie("selfie_dark_blurry.jpg") },
-                        onSelectMockMinorUri = { viewModel.selectSelfie("selfie_minor_protected.jpg") }
+                        onSelectMockMinorUri = { viewModel.selectSelfie("selfie_minor_protected.jpg") },
+                        currentLanguage = currentLanguage
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // Full Body Image Selection Box
                     PhotoPickerBox(
-                        title = "2. Silhouette Contour Photo (Full-Body)",
+                        title = strings.uploadFullBodyLabel,
                         uploadedPhoto = fullBody,
                         onSelectMockUri = { viewModel.selectFullBody("internal_fullbody_good.jpg") },
                         onSelectMockFailureUri = { viewModel.selectFullBody("fullbody_dark_blurry.jpg") },
-                        onSelectMockMinorUri = { viewModel.selectFullBody("fullbody_crowd_people.jpg") }
+                        onSelectMockMinorUri = { viewModel.selectFullBody("fullbody_crowd_people.jpg") },
+                        currentLanguage = currentLanguage
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -121,13 +148,18 @@ fun UploadScreen(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text("Rejection Reason: ${state.reason}", color = Color(0xFF9B1C1C), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                val reasonLabel = if (currentLanguage == AppLanguage.EN) "Rejection Reason" else "Причина отклонения"
+                                Text("$reasonLabel: ${state.reason}", color = Color(0xFF9B1C1C), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 state.warnings.forEach { warn ->
                                     Text(warn, color = Color(0xFF9B1C1C), style = MaterialTheme.typography.bodySmall)
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 TextButton(onClick = { viewModel.clearUploads() }) {
-                                    Text("Clear and Upload Another", color = Color(0xFF9B1C1C), fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = if (currentLanguage == AppLanguage.EN) "Clear and Upload Another" else "Очистить и загрузить заново",
+                                        color = Color(0xFF9B1C1C),
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }
@@ -147,7 +179,7 @@ fun UploadScreen(
                         enabled = selfie != null && fullBody != null && state !is UploadUiState.ValidationFailed,
                         modifier = Modifier.fillMaxWidth().height(50.dp)
                     ) {
-                        Text("Initiate Style Analysis")
+                        Text(strings.uploadButton)
                     }
 
                     if (selfie != null || fullBody != null) {
@@ -155,7 +187,7 @@ fun UploadScreen(
                             onClick = { viewModel.clearUploads() },
                             modifier = Modifier.padding(top = 8.dp)
                         ) {
-                            Text("Reset All Uploads", color = MaterialTheme.colorScheme.primary)
+                            Text(if (currentLanguage == AppLanguage.EN) "Reset All Uploads" else "Сбросить загрузки", color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -170,7 +202,8 @@ fun PhotoPickerBox(
     uploadedPhoto: UploadedPhoto?,
     onSelectMockUri: () -> Unit,
     onSelectMockFailureUri: () -> Unit,
-    onSelectMockMinorUri: () -> Unit
+    onSelectMockMinorUri: () -> Unit,
+    currentLanguage: AppLanguage
 ) {
     var showTestingSelectionMenu by remember { mutableStateOf(false) }
 
@@ -189,13 +222,26 @@ fun PhotoPickerBox(
         ) {
             if (uploadedPhoto == null) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("+ Select Image", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                    Text("Click to pick mock state", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = if (currentLanguage == AppLanguage.EN) "+ Select Image" else "+ Выберите изображение",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = if (currentLanguage == AppLanguage.EN) "Click to pick mock state" else "Нажмите для выбора состояния",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
                     Text("✓ ${uploadedPhoto.uriString}", color = SoftMoss, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
-                    Text("Ready for validation checks", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = if (currentLanguage == AppLanguage.EN) "Ready for validation checks" else "Готово к проверке безопасности",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }
@@ -206,27 +252,25 @@ fun PhotoPickerBox(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(onClick = { onSelectMockUri(); showTestingSelectionMenu = false }, colors = ButtonDefaults.buttonColors(containerColor = SoftMoss)) {
-                    Text("Select Safe", fontSize = 11.sp)
+                    Text(if (currentLanguage == AppLanguage.EN) "Select Safe" else "Безопасное", fontSize = 11.sp)
                 }
                 Button(onClick = { onSelectMockFailureUri(); showTestingSelectionMenu = false }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC76B6B))) {
-                    Text("Select Dark/Blurry", fontSize = 11.sp)
+                    Text(if (currentLanguage == AppLanguage.EN) "Select Dark/Blurry" else "Темное/Размытое", fontSize = 11.sp)
                 }
                 Button(onClick = { onSelectMockMinorUri(); showTestingSelectionMenu = false }, colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)) {
-                    Text("Trigger Safety Filter", fontSize = 11.sp)
+                    Text(if (currentLanguage == AppLanguage.EN) "Trigger Safety Filter" else "Сработать фильтр", fontSize = 11.sp)
                 }
             }
         }
     }
 }
 
-/**
- * Loading states with Compose loading indicators and step-based progress.
- */
 @Composable
 fun AnalysisProgressView(
     stepIndex: Int,
     stepText: String,
-    percentage: Int
+    percentage: Int,
+    currentLanguage: AppLanguage
 ) {
     Column(
         modifier = Modifier
@@ -244,7 +288,7 @@ fun AnalysisProgressView(
         )
         Spacer(modifier = Modifier.height(32.dp))
         Text(
-            text = "Analyzing Profile... $percentage%",
+            text = if (currentLanguage == AppLanguage.EN) "Analyzing Profile... $percentage%" else "Анализ профиля... $percentage%",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -262,7 +306,17 @@ fun AnalysisProgressView(
 
         // Small indicator checklist tracker
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            val steps = listOf("Photo safety scan", "Color palette assignment", "Silhouette outline checks", "Style categorization report ready")
+            val steps = if (currentLanguage == AppLanguage.EN) listOf(
+                "Photo safety scan",
+                "Color palette assignment",
+                "Silhouette outline checks",
+                "Style categorization report ready"
+            ) else listOf(
+                "Проверка безопасности",
+                "Анализ цветовой палитры",
+                "Геометрия силуэта",
+                "Формирование отчета"
+            )
             steps.forEachIndexed { idx, label ->
                 val opacity = if (idx <= stepIndex / 2) 1.0f else 0.4f
                 val checkText = if (idx < stepIndex / 2) "✓" else if (idx == stepIndex / 2) "●" else "○"

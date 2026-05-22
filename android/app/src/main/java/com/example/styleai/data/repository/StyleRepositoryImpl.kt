@@ -9,11 +9,29 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
-class StyleRepositoryImpl : StyleRepository {
+class StyleRepositoryImpl(private val context: android.content.Context? = null) : StyleRepository {
 
-    private val consentState = MutableStateFlow(UserConsentState())
-    private val selectedLanguage = MutableStateFlow(AppLanguage.EN)
-    private val onboardingCompleted = MutableStateFlow(false)
+    private val prefs by lazy {
+        context?.getSharedPreferences("styleai_prefs", android.content.Context.MODE_PRIVATE)
+    }
+
+    private val consentState = MutableStateFlow(
+        UserConsentState(
+            hasPhotoPermission = prefs?.getBoolean("consent_photo_permission", false) ?: false,
+            understandsDisclaimer = prefs?.getBoolean("consent_understands_disclaimer", false) ?: false,
+            rawPhotosNotStored = prefs?.getBoolean("consent_raw_photos_not_stored", false) ?: false
+        )
+    )
+    private val selectedLanguage = MutableStateFlow(
+        try {
+            AppLanguage.valueOf(prefs?.getString("selected_language", AppLanguage.EN.name) ?: AppLanguage.EN.name)
+        } catch (e: Exception) {
+            AppLanguage.EN
+        }
+    )
+    private val onboardingCompleted = MutableStateFlow(
+        prefs?.getBoolean("onboarding_completed", false) ?: false
+    )
 
     private val uploadedPhotos = MutableStateFlow<List<UploadedPhoto>>(emptyList())
     private val activeReport = MutableStateFlow<StyleReport?>(null)
@@ -26,13 +44,20 @@ class StyleRepositoryImpl : StyleRepository {
     
     override suspend fun saveConsentState(state: UserConsentState) {
         consentState.value = state
-        SafeLogger.i("Consent state has been saved in local memory storage safely.")
+        prefs?.edit()?.apply {
+            putBoolean("consent_photo_permission", state.hasPhotoPermission)
+            putBoolean("consent_understands_disclaimer", state.understandsDisclaimer)
+            putBoolean("consent_raw_photos_not_stored", state.rawPhotosNotStored)
+            apply()
+        }
+        SafeLogger.i("Consent state has been saved in local preference storage safely.")
     }
 
     override fun getSelectedLanguage(): Flow<AppLanguage> = selectedLanguage
 
     override suspend fun saveSelectedLanguage(language: AppLanguage) {
         selectedLanguage.value = language
+        prefs?.edit()?.putString("selected_language", language.name)?.apply()
         SafeLogger.i("Selected App Language changed to: ${language.name}")
     }
 
@@ -40,6 +65,7 @@ class StyleRepositoryImpl : StyleRepository {
 
     override suspend fun saveOnboardingCompleted(completed: Boolean) {
         onboardingCompleted.value = completed
+        prefs?.edit()?.putBoolean("onboarding_completed", completed)?.apply()
         SafeLogger.i("Onboarding completed status updated: $completed")
     }
 
@@ -208,5 +234,19 @@ class StyleRepositoryImpl : StyleRepository {
                 }
             }
         }
+    }
+
+    override suspend fun clearStyleData() {
+        clearAllLocalData()
+    }
+
+    override suspend fun resetOnboarding() {
+        saveOnboardingCompleted(false)
+        saveConsentState(UserConsentState())
+        clearPhotos()
+    }
+
+    override suspend fun addGeneratedOutfitIdea(idea: OutfitIdea) {
+        outfitIdeas.update { current -> listOf(idea) + current }
     }
 }
