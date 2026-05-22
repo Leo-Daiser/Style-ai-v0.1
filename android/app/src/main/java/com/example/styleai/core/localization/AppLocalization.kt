@@ -78,6 +78,44 @@ interface AppStrings {
     val settingsResetOnboardingButton: String
     val settingsExportButton: String
     val settingsDismiss: String
+
+    // Home strings
+    val homeTitle: String
+    val homeSubtitle: String
+    val homeCheckBuyTitle: String
+    val homeCheckBuyDesc: String
+    val homeCheckBuyBtn: String
+    val homeCreateProfileTitle: String
+    val homeCreateProfileDesc: String
+    val homeCreateProfileBtn: String
+    val homeReportActiveTitle: String
+    val homeReportOpenBtn: String
+    val homeReportDirectionsCount: String
+    val homeReportGapsCount: String
+    val homeQuickOutfitIdeas: String
+    val homeQuickSavedLooks: String
+    val homeQuickCredits: String
+    val homeQuickPrivacy: String
+    val homePrivacyReassuranceTitle: String
+    val homePrivacyReassuranceDesc: String
+
+    // Shopping Check strings
+    val shopTitle: String
+    val shopSubtitle: String
+    val shopCategoryLabel: String
+    val shopPhotoLabel: String
+    val shopBtnAnalyze: String
+    val shopResultTitle: String
+    val shopVerdictGood: String
+    val shopVerdictMaybe: String
+    val shopVerdictSkip: String
+    val shopSectionColor: String
+    val shopSectionSilhouette: String
+    val shopSectionCapsule: String
+    val shopSectionVersatility: String
+    val shopSectionOutfits: String
+    val shopSectionAdvice: String
+    val shopBtnBack: String
 }
 
 object AppStringsEn : AppStrings {
@@ -156,6 +194,44 @@ object AppStringsEn : AppStrings {
     override val settingsResetOnboardingButton = "Reset App Onboarding"
     override val settingsExportButton = "Export Style Report (JSON)"
     override val settingsDismiss = "Dismiss"
+
+    // Home strings implementation
+    override val homeTitle = "StyleAI"
+    override val homeSubtitle = "Choose what you need today."
+    override val homeCheckBuyTitle = "Should I buy this?"
+    override val homeCheckBuyDesc = "Check if a clothing item fits your style, capsule, and wardrobe goals."
+    override val homeCheckBuyBtn = "Check an item"
+    override val homeCreateProfileTitle = "Create your style profile"
+    override val homeCreateProfileDesc = "Optional: upload photos to generate a personal palette, silhouettes, and capsule recommendations."
+    override val homeCreateProfileBtn = "Create profile"
+    override val homeReportActiveTitle = "Your Active Style Report"
+    override val homeReportOpenBtn = "Open report"
+    override val homeReportDirectionsCount = "Style directions available"
+    override val homeReportGapsCount = "Wardrobe gaps identified"
+    override val homeQuickOutfitIdeas = "Outfit ideas"
+    override val homeQuickSavedLooks = "Saved looks"
+    override val homeQuickCredits = "Credits"
+    override val homeQuickPrivacy = "Privacy"
+    override val homePrivacyReassuranceTitle = "Offline MVP mode"
+    override val homePrivacyReassuranceDesc = "No internet permission. No raw photos are stored by default."
+
+    // Shopping Check strings implementation
+    override val shopTitle = "Should I Buy This?"
+    override val shopSubtitle = "Verify if a garment fits your local style before purchase"
+    override val shopCategoryLabel = "Select Garment Category"
+    override val shopPhotoLabel = "Upload Item Photo (Optional)"
+    override val shopBtnAnalyze = "Run Style Check"
+    override val shopResultTitle = "Garment Compatibility Verdict"
+    override val shopVerdictGood = "Excellent Styling Match"
+    override val shopVerdictMaybe = "Conditional Match"
+    override val shopVerdictSkip = "Skip / Avoid"
+    override val shopSectionColor = "Color Palette Harmony"
+    override val shopSectionSilhouette = "Silhouette & Fit"
+    override val shopSectionCapsule = "Capsule Alignment"
+    override val shopSectionVersatility = "Versatility Rate"
+    override val shopSectionOutfits = "Assembled Combinations"
+    override val shopSectionAdvice = "Expert Style Note"
+    override val shopBtnBack = "Back to Home Screen"
 }
 
 object AppStringsRu : AppStrings {
@@ -234,6 +310,44 @@ object AppStringsRu : AppStrings {
     override val settingsResetOnboardingButton = "Сбросить онбординг приложения"
     override val settingsExportButton = "Экспортировать отчет (JSON)"
     override val settingsDismiss = "Скрыть"
+
+    // Home strings implementation (RU)
+    override val homeTitle = "StyleAI"
+    override val homeSubtitle = "Выберите, что вам нужно сегодня."
+    override val homeCheckBuyTitle = "Стоит ли покупать?"
+    override val homeCheckBuyDesc = "Проверьте, подходит ли вещь вашему стилю, капсуле и целям гардероба."
+    override val homeCheckBuyBtn = "Проверить вещь"
+    override val homeCreateProfileTitle = "Создать стиль-профиль"
+    override val homeCreateProfileDesc = "Необязательно: загрузите фото, чтобы получить палитру, силуэты и рекомендации по капсуле."
+    override val homeCreateProfileBtn = "Создать профиль"
+    override val homeReportActiveTitle = "Ваш активный стиль-отчет"
+    override val homeReportOpenBtn = "Открыть отчет"
+    override val homeReportDirectionsCount = "Доступно стилей"
+    override val homeReportGapsCount = "Пробелов в гардеробе найдено"
+    override val homeQuickOutfitIdeas = "Идеи образов"
+    override val homeQuickSavedLooks = "Сохраненные образы"
+    override val homeQuickCredits = "Кредиты"
+    override val homeQuickPrivacy = "Приватность"
+    override val homePrivacyReassuranceTitle = "Офлайн-режим MVP"
+    override val homePrivacyReassuranceDesc = "Нет доступа к интернету. Исходные фотографии по умолчанию не сохраняются."
+
+    // Shopping Check strings implementation (RU)
+    override val shopTitle = "Стоит ли покупать?"
+    override val shopSubtitle = "Проверьте совместимость вещи с вашим стилем перед покупкой"
+    override val shopCategoryLabel = "Выберите категорию вещи"
+    override val shopPhotoLabel = "Загрузить фото вещи (Необязательно)"
+    override val shopBtnAnalyze = "Проверить совместимость"
+    override val shopResultTitle = "Вердикт совместимости вещи"
+    override val shopVerdictGood = "Отличное соответствие"
+    override val shopVerdictMaybe = "Условное соответствие"
+    override val shopVerdictSkip = "Рекомендуется пропустить"
+    override val shopSectionColor = "Гармония цветовой палитры"
+    override val shopSectionSilhouette = "Силуэт и посадка"
+    override val shopSectionCapsule = "Совместимость с капсулой"
+    override val shopSectionVersatility = "Коэффициент сочетаемости"
+    override val shopSectionOutfits = "Число комбинаций в гардеробе"
+    override val shopSectionAdvice = "Совет стилиста"
+    override val shopBtnBack = "Назад на главную"
 }
 
 object AppLocalization {

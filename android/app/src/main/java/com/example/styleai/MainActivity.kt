@@ -30,7 +30,11 @@ import com.example.styleai.feature.upload.UploadScreen
 import com.example.styleai.feature.upload.UploadViewModel
 import com.example.styleai.feature.visualization.VisualizationScreen
 import com.example.styleai.feature.visualization.VisualizationViewModel
+import com.example.styleai.feature.home.HomeScreen
+import com.example.styleai.feature.home.HomeViewModel
+import com.example.styleai.feature.home.ShoppingCheckScreen
 import com.example.styleai.core.localization.AppLocalization
+import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -85,15 +89,8 @@ class MainActivity : ComponentActivity() {
                                                 popUpTo("splash") { inclusive = true }
                                             }
                                         } else {
-                                            val activeReport = styleRepository.getActiveReport().first()
-                                            if (activeReport != null) {
-                                                navController.navigate("report") {
-                                                    popUpTo("splash") { inclusive = true }
-                                                }
-                                            } else {
-                                                navController.navigate("upload") {
-                                                    popUpTo("splash") { inclusive = true }
-                                                }
+                                            navController.navigate("report") {
+                                                popUpTo("splash") { inclusive = true }
                                             }
                                         }
                                     }
@@ -119,7 +116,7 @@ class MainActivity : ComponentActivity() {
                         ConsentScreen(
                             viewModel = onboardingViewModel,
                             onConsentApproved = {
-                                navController.navigate("upload") {
+                                navController.navigate("report") {
                                     popUpTo("consent") { inclusive = true }
                                 }
                             }
@@ -131,7 +128,7 @@ class MainActivity : ComponentActivity() {
                         UploadScreen(
                             viewModel = uploadViewModel,
                             onNavigateToReport = {
-                                navController.navigate("report") {
+                                navController.navigate("report_detail") {
                                     popUpTo("upload") { inclusive = true }
                                 }
                             }
@@ -154,6 +151,49 @@ class MainActivity : ComponentActivity() {
                             },
                             onNavigateToUpload = {
                                 navController.navigate("upload")
+                            },
+                            onNavigateToShoppingCheck = {
+                                navController.navigate("shopping_check")
+                            },
+                            onNavigateToReportDetail = {
+                                navController.navigate("report_detail")
+                            }
+                        )
+                    }
+
+                    composable("report_detail") {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
+                                val currentLanguage by selectedLanguageState.collectAsState()
+                                TextButton(onClick = { navController.popBackStack() }) {
+                                    Text(
+                                        text = if (currentLanguage == AppLanguage.RU) "← Назад" else "← Back",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                            ReportScreen(
+                                reportState = activeReportState,
+                                selectedLanguage = selectedLanguageState,
+                                onToggleGapCompleted = { gapId -> }
+                            )
+                        }
+                    }
+
+                    composable("shopping_check") {
+                        ShoppingCheckScreen(
+                            currentLanguageState = selectedLanguageState,
+                            onNavigateBack = {
+                                navController.popBackStack()
                             }
                         )
                     }
@@ -181,7 +221,9 @@ fun DashboardHostScreen(
     selectedLanguageState: StateFlow<AppLanguage>,
     onNavigateToPaywall: () -> Unit,
     onResetOnboarding: () -> Unit,
-    onNavigateToUpload: () -> Unit
+    onNavigateToUpload: () -> Unit,
+    onNavigateToShoppingCheck: () -> Unit,
+    onNavigateToReportDetail: () -> Unit
 ) {
     var activeTab by remember { mutableStateOf(0) }
     val currentLanguage by selectedLanguageState.collectAsState()
@@ -196,8 +238,8 @@ fun DashboardHostScreen(
                 NavigationBarItem(
                     selected = activeTab == 0,
                     onClick = { activeTab = 0 },
-                    icon = { Text("📋", fontSize = 20.sp) },
-                    label = { Text(if (currentLanguage == AppLanguage.EN) "Report" else "Отчет", fontSize = 10.sp) }
+                    icon = { Text("🏠", fontSize = 20.sp) },
+                    label = { Text(if (currentLanguage == AppLanguage.EN) "Home" else "Главная", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = activeTab == 1,
@@ -208,7 +250,7 @@ fun DashboardHostScreen(
                 NavigationBarItem(
                     selected = activeTab == 2,
                     onClick = { activeTab = 2 },
-                    icon = { Text("🕒", fontSize = 20.sp) },
+                    icon = { Text("📂", fontSize = 20.sp) },
                     label = { Text(if (currentLanguage == AppLanguage.EN) "History" else "История", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
@@ -223,31 +265,17 @@ fun DashboardHostScreen(
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             when (activeTab) {
                 0 -> {
-                    val reportExists by activeReportState.collectAsState()
-                    if (reportExists == null) {
-                        // If no report has been generated, prompt a helpful indicator to let them go to upload
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                            Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                                Text(
-                                    text = if (currentLanguage == AppLanguage.EN) "No active styling report found." else "Активный отчет по стилю не найден.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Gray
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Button(onClick = onNavigateToUpload) {
-                                    Text(if (currentLanguage == AppLanguage.EN) "Run Profile Scan" else "Запустить сканирование")
-                                }
-                            }
-                        }
-                    } else {
-                        ReportScreen(
-                            reportState = activeReportState,
-                            selectedLanguage = selectedLanguageState,
-                            onToggleGapCompleted = { gapId ->
-                                // Optional local interactive action for Wardrobe Checklist gaps toggling
-                            }
-                        )
+                    val homeViewModel = remember {
+                        HomeViewModel(styleRepository, billingRepository)
                     }
+                    HomeScreen(
+                        viewModel = homeViewModel,
+                        onNavigateToShoppingCheck = onNavigateToShoppingCheck,
+                        onNavigateToUpload = onNavigateToUpload,
+                        onNavigateToReportDetail = onNavigateToReportDetail,
+                        onNavigateToPaywall = onNavigateToPaywall,
+                        onSwitchTab = { targetTab -> activeTab = targetTab }
+                    )
                 }
                 1 -> {
                     val visualizationViewModel = remember {
