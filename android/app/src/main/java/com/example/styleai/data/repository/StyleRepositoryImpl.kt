@@ -4,34 +4,54 @@ import com.example.styleai.data.mock.MockData
 import com.example.styleai.domain.model.*
 import com.example.styleai.domain.repository.StyleRepository
 import com.example.styleai.core.privacy.SafeLogger
+import com.example.styleai.data.local.StyleDataStoreKeys
+import com.example.styleai.data.local.dataStore
+import androidx.datastore.preferences.core.edit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class StyleRepositoryImpl(private val context: android.content.Context? = null) : StyleRepository {
 
-    private val prefs by lazy {
-        context?.getSharedPreferences("styleai_prefs", android.content.Context.MODE_PRIVATE)
-    }
+    private val repositoryScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val consentState = MutableStateFlow(
         UserConsentState(
-            hasPhotoPermission = prefs?.getBoolean("consent_photo_permission", false) ?: false,
-            understandsDisclaimer = prefs?.getBoolean("consent_understands_disclaimer", false) ?: false,
-            rawPhotosNotStored = prefs?.getBoolean("consent_raw_photos_not_stored", false) ?: false
+            hasPhotoPermission = false,
+            understandsDisclaimer = false,
+            rawPhotosNotStored = false
         )
     )
-    private val selectedLanguage = MutableStateFlow(
-        try {
-            AppLanguage.valueOf(prefs?.getString("selected_language", AppLanguage.EN.name) ?: AppLanguage.EN.name)
-        } catch (e: Exception) {
-            AppLanguage.EN
+    private val selectedLanguage = MutableStateFlow(AppLanguage.EN)
+    private val onboardingCompleted = MutableStateFlow(false)
+
+    init {
+        context?.let { ctx ->
+            repositoryScope.launch {
+                ctx.dataStore.data.collect { prefs ->
+                    val langStr = prefs[StyleDataStoreKeys.SELECTED_LANGUAGE] ?: AppLanguage.EN.name
+                    selectedLanguage.value = try {
+                        AppLanguage.valueOf(langStr)
+                    } catch (e: Exception) {
+                        AppLanguage.EN
+                    }
+
+                    onboardingCompleted.value = prefs[StyleDataStoreKeys.ONBOARDING_COMPLETED] ?: false
+
+                    consentState.value = UserConsentState(
+                        hasPhotoPermission = prefs[StyleDataStoreKeys.CONSENT_PHOTO_PERMISSION] ?: false,
+                        understandsDisclaimer = prefs[StyleDataStoreKeys.CONSENT_UNDERSTANDS_DISCLAIMER] ?: false,
+                        rawPhotosNotStored = prefs[StyleDataStoreKeys.CONSENT_RAW_PHOTOS_NOT_STORED] ?: false
+                    )
+                }
+            }
         }
-    )
-    private val onboardingCompleted = MutableStateFlow(
-        prefs?.getBoolean("onboarding_completed", false) ?: false
-    )
+    }
 
     private val uploadedPhotos = MutableStateFlow<List<UploadedPhoto>>(emptyList())
     private val activeReport = MutableStateFlow<StyleReport?>(null)
@@ -44,20 +64,25 @@ class StyleRepositoryImpl(private val context: android.content.Context? = null) 
     
     override suspend fun saveConsentState(state: UserConsentState) {
         consentState.value = state
-        prefs?.edit()?.apply {
-            putBoolean("consent_photo_permission", state.hasPhotoPermission)
-            putBoolean("consent_understands_disclaimer", state.understandsDisclaimer)
-            putBoolean("consent_raw_photos_not_stored", state.rawPhotosNotStored)
-            apply()
+        context?.let { ctx ->
+            ctx.dataStore.edit { prefs ->
+                prefs[StyleDataStoreKeys.CONSENT_PHOTO_PERMISSION] = state.hasPhotoPermission
+                prefs[StyleDataStoreKeys.CONSENT_UNDERSTANDS_DISCLAIMER] = state.understandsDisclaimer
+                prefs[StyleDataStoreKeys.CONSENT_RAW_PHOTOS_NOT_STORED] = state.rawPhotosNotStored
+            }
         }
-        SafeLogger.i("Consent state has been saved in local preference storage safely.")
+        SafeLogger.i("Consent state has been saved in local DataStore safely.")
     }
 
     override fun getSelectedLanguage(): Flow<AppLanguage> = selectedLanguage
 
     override suspend fun saveSelectedLanguage(language: AppLanguage) {
         selectedLanguage.value = language
-        prefs?.edit()?.putString("selected_language", language.name)?.apply()
+        context?.let { ctx ->
+            ctx.dataStore.edit { prefs ->
+                prefs[StyleDataStoreKeys.SELECTED_LANGUAGE] = language.name
+            }
+        }
         SafeLogger.i("Selected App Language changed to: ${language.name}")
     }
 
@@ -65,7 +90,11 @@ class StyleRepositoryImpl(private val context: android.content.Context? = null) 
 
     override suspend fun saveOnboardingCompleted(completed: Boolean) {
         onboardingCompleted.value = completed
-        prefs?.edit()?.putBoolean("onboarding_completed", completed)?.apply()
+        context?.let { ctx ->
+            ctx.dataStore.edit { prefs ->
+                prefs[StyleDataStoreKeys.ONBOARDING_COMPLETED] = completed
+            }
+        }
         SafeLogger.i("Onboarding completed status updated: $completed")
     }
 
@@ -109,7 +138,14 @@ class StyleRepositoryImpl(private val context: android.content.Context? = null) 
         SafeLogger.i("Local volatile photo URI references erased.")
     }
 
-    override fun getActiveReport(): Flow<StyleReport?> = activeReport
+    override fun getActiveReport(): Flow<StyleReport?> = kotlinx.coroutines.flow.combine(activeReport, selectedLanguage) { report, lang ->
+        if (report == null) null
+        else if (lang == AppLanguage.RU) {
+            MockData.sampleStyleReportRu.copy(id = report.id, date = report.date)
+        } else {
+            MockData.sampleStyleReport.copy(id = report.id, date = report.date)
+        }
+    }
 
     override suspend fun generateReport(selfie: UploadedPhoto, fullBody: UploadedPhoto): StyleReport {
         SafeLogger.i("Initiating color analysis on local GPU structures...")

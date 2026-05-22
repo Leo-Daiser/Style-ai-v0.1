@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
@@ -32,7 +33,9 @@ import com.example.styleai.feature.visualization.VisualizationViewModel
 import com.example.styleai.core.localization.AppLocalization
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -69,26 +72,27 @@ class MainActivity : ComponentActivity() {
                     composable("splash") {
                         SplashScreen(
                             onSplashFinished = {
-                                // Decide splash routing based on completion status
-                                val onboardingCompletedFlow = styleRepository.isOnboardingCompleted()
-                                val consentFlow = styleRepository.getConsentState()
-                                
-                                lifecycleScope.launchWhenStarted {
-                                    onboardingCompletedFlow.collect { onboardingCompleted ->
-                                        if (!onboardingCompleted) {
-                                            navController.navigate("onboarding") {
+                                lifecycleScope.launch {
+                                    val onboardingCompleted = styleRepository.isOnboardingCompleted().first()
+                                    if (!onboardingCompleted) {
+                                        navController.navigate("onboarding") {
+                                            popUpTo("splash") { inclusive = true }
+                                        }
+                                    } else {
+                                        val consent = styleRepository.getConsentState().first()
+                                        if (!consent.isFullyConsented) {
+                                            navController.navigate("consent") {
                                                 popUpTo("splash") { inclusive = true }
                                             }
                                         } else {
-                                            consentFlow.collect { consent ->
-                                                if (!consent.isFullyConsented) {
-                                                    navController.navigate("consent") {
-                                                        popUpTo("splash") { inclusive = true }
-                                                    }
-                                                } else {
-                                                    navController.navigate("report") {
-                                                        popUpTo("splash") { inclusive = true }
-                                                    }
+                                            val activeReport = styleRepository.getActiveReport().first()
+                                            if (activeReport != null) {
+                                                navController.navigate("report") {
+                                                    popUpTo("splash") { inclusive = true }
+                                                }
+                                            } else {
+                                                navController.navigate("upload") {
+                                                    popUpTo("splash") { inclusive = true }
                                                 }
                                             }
                                         }
@@ -147,6 +151,9 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("onboarding") {
                                     popUpTo("report") { inclusive = true }
                                 }
+                            },
+                            onNavigateToUpload = {
+                                navController.navigate("upload")
                             }
                         )
                     }
@@ -173,7 +180,8 @@ fun DashboardHostScreen(
     activeReportState: StateFlow<StyleReport?>,
     selectedLanguageState: StateFlow<AppLanguage>,
     onNavigateToPaywall: () -> Unit,
-    onResetOnboarding: () -> Unit
+    onResetOnboarding: () -> Unit,
+    onNavigateToUpload: () -> Unit
 ) {
     var activeTab by remember { mutableStateOf(0) }
     val currentLanguage by selectedLanguageState.collectAsState()
@@ -226,7 +234,7 @@ fun DashboardHostScreen(
                                     color = Color.Gray
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
-                                Button(onClick = onResetOnboarding) {
+                                Button(onClick = onNavigateToUpload) {
                                     Text(if (currentLanguage == AppLanguage.EN) "Run Profile Scan" else "Запустить сканирование")
                                 }
                             }

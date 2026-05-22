@@ -73,21 +73,25 @@ fun OnboardingScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
+    val currentLanguage by viewModel.selectedLanguage.collectAsState()
+    val strings = AppLocalization.getStrings(currentLanguage)
 
-    val pages = listOf(
-        OnboardingPageData(
-            title = "Discover your personal style",
-            description = "Get a style report based on your appearance, preferences, and goals."
-        ),
-        OnboardingPageData(
-            title = "Build better outfits",
-            description = "Understand your colors, silhouettes, wardrobe gaps, and outfit directions."
-        ),
-        OnboardingPageData(
-            title = "Privacy-first by design",
-            description = "Your photos are processed only for your style report. Raw photos are not stored by default."
+    val pages = remember(currentLanguage) {
+        listOf(
+            OnboardingPageData(
+                title = strings.onboardingTitle1,
+                description = strings.onboardingDesc1
+            ),
+            OnboardingPageData(
+                title = strings.onboardingTitle2,
+                description = strings.onboardingDesc2
+            ),
+            OnboardingPageData(
+                title = strings.onboardingTitle3,
+                description = strings.onboardingDesc3
+            )
         )
-    )
+    }
 
     Column(
         modifier = Modifier
@@ -101,8 +105,8 @@ fun OnboardingScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onClick = onOnboardingFinished) {
-                Text("Skip", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+            TextButton(onClick = { viewModel.finishOnboarding(onOnboardingFinished) }) {
+                Text(strings.onboardingSkip, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
             }
         }
 
@@ -162,12 +166,12 @@ fun OnboardingScreen(
                             pagerState.animateScrollToPage(pagerState.currentPage + 1)
                         }
                     } else {
-                        onOnboardingFinished()
+                        viewModel.finishOnboarding(onOnboardingFinished)
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (pagerState.currentPage == 2) "Get started" else "Continue")
+                Text(if (pagerState.currentPage == 2) strings.onboardingFinish else strings.onboardingContinue)
             }
         }
     }
@@ -183,6 +187,8 @@ fun ConsentScreen(
     onConsentApproved: () -> Unit
 ) {
     val state by viewModel.consentState.collectAsState()
+    val currentLanguage by viewModel.selectedLanguage.collectAsState()
+    val strings = AppLocalization.getStrings(currentLanguage)
 
     Column(
         modifier = Modifier
@@ -193,13 +199,13 @@ fun ConsentScreen(
     ) {
         Column {
             Text(
-                text = "Privacy & Consent Guidelines",
+                text = strings.consentTitle,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                text = "Before we begin analyzing, StyleAI requires explicit permission to adhere strictly to safety filters:",
+                text = strings.consentSubtitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -207,19 +213,19 @@ fun ConsentScreen(
 
             // Dynamic Checkboxes
             CheckboxRow(
-                text = "I confirm that the uploaded photo is of me or I have explicit permission from the person in the photo.",
+                text = strings.consentCheck1,
                 checked = state.hasPhotoPermission,
                 onCheckedChange = { checked -> viewModel.updateConsent(photoPermission = checked) }
             )
 
             CheckboxRow(
-                text = "I understand that this app gives style suggestions, not medical, legal, or professional body/fashion advice.",
+                text = strings.consentCheck2,
                 checked = state.understandsDisclaimer,
                 onCheckedChange = { checked -> viewModel.updateConsent(understandsDisclaimer = checked) }
             )
 
             CheckboxRow(
-                text = "I understand that raw photos are processed in memory and are not stored by default.",
+                text = strings.consentCheck3,
                 checked = state.rawPhotosNotStored,
                 onCheckedChange = { checked -> viewModel.updateConsent(rawPhotosNotStored = checked) }
             )
@@ -235,14 +241,14 @@ fun ConsentScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Safety Note for Users",
+                        text = if (currentLanguage == AppLanguage.EN) "Safety Note" else "Безопасность использования",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Unsafe or non-consensual image use is not allowed. The app does not support nudity, underwear, erotic content, minors, or attempts to alter someone without consent.",
+                        text = if (currentLanguage == AppLanguage.EN) "Unsafe or non-consensual image use is not allowed. The app does not support nudity, underwear, erotic content, minors, or attempts to alter someone without consent." else "Использование некорректных фотографий или обработка без согласия строго запрещены. Приложение не поддерживает раздевание, интимные фото, эротику, изображения несовершеннолетних разработок.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -257,7 +263,7 @@ fun ConsentScreen(
             enabled = state.isFullyConsented,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Confirm and Continue")
+            Text(strings.consentButton)
         }
     }
 }

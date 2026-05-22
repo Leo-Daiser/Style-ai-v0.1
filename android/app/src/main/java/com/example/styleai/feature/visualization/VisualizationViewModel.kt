@@ -95,7 +95,26 @@ class VisualizationViewModel(
                 if (debited) {
                     SafeLogger.i("Visualization credit processed securely for query: $request")
                     kotlinx.coroutines.delay(1200) // simulated model rendering delay
-                    _uiState.value = VisualizerUiState.GenerationSuccess("outfit_gen_${System.currentTimeMillis()}")
+                    
+                    val newOutfitId = "outfit_gen_${System.currentTimeMillis()}"
+                    val idea = OutfitIdea(
+                        id = newOutfitId,
+                        title = "${_selectedOccasion.value.name} ${_selectedStyle.value.name} Look",
+                        occasion = _selectedOccasion.value.name,
+                        style = _selectedStyle.value.name,
+                        season = _selectedSeason.value.name,
+                        clothingItems = listOf(
+                            "Polished structural jacket match",
+                            "Symmetrical fit pants",
+                            "Neutral accent accessories"
+                        ),
+                        colorPalette = listOf("#1A1A1A", "#FFFFFF", "#8D7B68"),
+                        imagePlaceholderResId = "res_placeholder_gen",
+                        isSaved = false
+                    )
+                    styleRepository.addGeneratedOutfitIdea(idea)
+                    
+                    _uiState.value = VisualizerUiState.GenerationSuccess(newOutfitId)
                 } else {
                     _uiState.value = VisualizerUiState.InsufficientCredits(1)
                 }

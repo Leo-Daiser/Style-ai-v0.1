@@ -2,17 +2,23 @@ package com.example.styleai.feature.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.styleai.domain.model.AppLanguage
 import com.example.styleai.domain.model.UserConsentState
 import com.example.styleai.domain.repository.StyleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class OnboardingViewModel(
     private val styleRepository: StyleRepository
 ) : ViewModel() {
+
+    val selectedLanguage: StateFlow<AppLanguage> = styleRepository.getSelectedLanguage()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppLanguage.EN)
 
     private val _currentPage = MutableStateFlow(0)
     val currentPage: StateFlow<Int> = _currentPage.asStateFlow()
@@ -52,6 +58,13 @@ class OnboardingViewModel(
                 styleRepository.saveConsentState(_consentState.value)
                 onSuccess()
             }
+        }
+    }
+
+    fun finishOnboarding(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            styleRepository.saveOnboardingCompleted(true)
+            onSuccess()
         }
     }
 }

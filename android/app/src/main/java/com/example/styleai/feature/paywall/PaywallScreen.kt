@@ -135,7 +135,7 @@ fun PaywallScreen(
                     "pack_10" -> strings.paywallCreditsPack
                     "pack_30" -> if (currentLanguage == AppLanguage.EN) "Buy 30 Outfit Credits ($9.99)" else "Купить 30 кредитов образов ($9.99)"
                     "pack_100" -> if (currentLanguage == AppLanguage.EN) "Buy 100 Outfit Credits ($24.99)" else "Купить 100 кредитов образов ($24.99)"
-                    else -> plan.title
+                    else -> plan.name
                 }
 
                 Card(

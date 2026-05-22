@@ -12,11 +12,26 @@ object MockData {
         avoidColors = listOf("Vibrant Neon Lime", "Cold Royal Blue", "Harsh Pure White")
     )
 
+    val sampleColorPaletteRu = ColorPalette(
+        name = "Палитра Мягкая Осень",
+        description = "Теплая, приглушенная палитра, включающая землистые тона, песчаные нейтральные оттенки и мягкие терракотовые ноты, отлично гармонирующие с мягким теплым подтоном кожи.",
+        swatchColors = listOf("#E6D5C3", "#CDB49E", "#8D5B4C", "#5C6B5E", "#3A4D39", "#A87C66"),
+        priorityColors = listOf("Теплый терракот", "Оливковый зеленый", "Песочный и кремовый", "Мягкий кэмел"),
+        avoidColors = listOf("Яркий неоновый лайм", "Холодный королевский синий", "Резкий чисто-белый")
+    )
+
     val sampleSilhouettes = listOf(
         SilhouetteRecommendation("High-Waisted Trousers", "Creates vertical flow and supports natural waist balance, pairing beautifully with tucked-in knit tops.", "Bottoms"),
         SilhouetteRecommendation("Structured Blazers & Jackets", "Establishes structured shoulder alignment for smart-casual wear, adding crisp geometry to any casual base.", "Outerwear"),
         SilhouetteRecommendation("V-Neck or Open Collar Neckline", "Framing shoulders with flattering diagonal lines to emphasize a breathable, elevated look.", "Tops"),
         SilhouetteRecommendation("Midi-Length Skirts & Dresses", "Drapes softly through the calves to maintain structured proportion, optimal for fluid textiles.", "Dresses")
+    )
+
+    val sampleSilhouettesRu = listOf(
+        SilhouetteRecommendation("Брюки с высокой посадкой", "Создают вертикальные линии и подчеркивают талию, отлично сочетаются с трикотажным верхом.", "Низ"),
+        SilhouetteRecommendation("Структурированные блейзеры", "Придают четкость линии плеч для делового и повседневного стилей.", "Верхняя одежда"),
+        SilhouetteRecommendation("V-образный или открытый вырез", "Визуально удлиняет шею и плечи, придавая образу легкость.", "Топы"),
+        SilhouetteRecommendation("Юбки и платья миди", "Аккуратно драпируют и сохраняют пропорции фигуры, оптимально для струящихся тканей.", "Платья")
     )
 
     val sampleStyleDirections = listOf(
@@ -43,12 +58,44 @@ object MockData {
         )
     )
 
+    val sampleStyleDirectionsRu = listOf(
+        StyleDirection(
+            title = "Минималистичный шик",
+            description = "Качественные базовые вещи, четкие линии и нейтральные сочетания, ориентированные на комфорт и функциональность.",
+            bestUseCases = "Деловые встречи, прогулки по городу, посещение выставок, обеды.",
+            recommendedColors = listOf("Овсяный", "Насыщенный коричневый", "Теплый кремовый"),
+            recommendedItems = listOf("Кашемировый джемпер", "Укороченные прямые брюки", "Минималистичные кожаные лоферы")
+        ),
+        StyleDirection(
+            title = "Мягкая классика",
+            description = "Традиционный крой в сочетании с мягкими тканями, подчеркивающими баланс и вневременную симметрию.",
+            bestUseCases = "Повседневный деловой стиль, семейные ужины, бранчи по выходным.",
+            recommendedColors = listOf("Мягкий мох", "Теплый тауп", "Глубокий оливковый"),
+            recommendedItems = listOf("Классический тренч", "Темное платье-миди из плотного трикотажа", "Лаконичные золотые украшения")
+        ),
+        StyleDirection(
+            title = "Смарт Кэжуал",
+            description = "Сочетание элегантности и спортивного комфорта. Четкие воротники в паре с мягким денимом или качественным трикотажем.",
+            bestUseCases = "Офис, встречи с друзьями, путешествия.",
+            recommendedColors = listOf("Терракотовый коричневый", "Корица", "Классический кремовый"),
+            recommendedItems = listOf("Свободная хлопковая рубашка", "Прямые джинсы темного синего оттенка", "Белые кожаные кеды")
+        )
+    )
+
     val sampleWardrobeGaps = listOf(
         WardrobeGap("gap_1", "Neutral Blazer", false, "A structured blazer in soft beige or camel to elevate basic tees.", "Essential"),
         WardrobeGap("gap_2", "Straight-Leg Jeans", false, "High-rise, dark-rinse jeans with zero distressing for standard versatility.", "Essential"),
         WardrobeGap("gap_3", "Cream Silk/Cotton Shirt", false, "A clean classic button-down in soft cream instead of stark pure white.", "Essential"),
         WardrobeGap("gap_4", "Tan Leather Belt", false, "Fine textured belt to bind structured blazers and high-waisted trousers.", "Recommended"),
         WardrobeGap("gap_5", "Minimalist White Sneakers", false, "Clean-profile white sneakers to pair with midi dresses and denims.", "Recommended")
+    )
+
+    val sampleWardrobeGapsRu = listOf(
+        WardrobeGap("gap_1", "Базовый пиджак/блейзер", false, "Структурированный блейзер бежевого или песочного цвета для любого образа.", "Базовый гардероб"),
+        WardrobeGap("gap_2", "Прямые джинсы", false, "Классические джинсы средней посадки без потертостей для максимальной практичности.", "Базовый гардероб"),
+        WardrobeGap("gap_3", "Кремовая рубашка", false, "Классическая хлопковая рубашка мягкого кремового оттенка вместо резкого белого.", "Базовый гардероб"),
+        WardrobeGap("gap_4", "Кожаный ремень", false, "Фактурный кожаный ремень для блейзеров и классических брюк.", "Дополнительно"),
+        WardrobeGap("gap_5", "Минималистичные белые кеды", false, "Белые кеды простого силуэта для сочетания с платьями и джинсами.", "Дополнительно")
     )
 
     val sampleShoppingItems = listOf(
@@ -59,10 +106,24 @@ object MockData {
         ShoppingItem("shop_5", 5, "Medium-Size Everyday Bag", "$90 - $200", "Look for a neutral tan leather shoulder bucket or structured flap bag.")
     )
 
+    val sampleShoppingItemsRu = listOf(
+        ShoppingItem("shop_1", 1, "Легкий блейзер", "$80 - $150", "Выбирайте ткани из шерсти средней плотности или лен в овсяном/песочном тоне."),
+        ShoppingItem("shop_2", 2, "Прямые брюки", "$60 - $110", "Ищите модели с завышенной талией и стрелками."),
+        ShoppingItem("shop_3", 3, "Базовые белые кеды", "$70 - $130", "Выбирайте минималистичные кожаные модели без принтов."),
+        ShoppingItem("shop_4", 4, "Мягкий трикотажный топ", "$40 - $80", "Попробуйте модели в рубчик оливкового, терракотового или шалфейного оттенков."),
+        ShoppingItem("shop_5", 5, "Сумка среднего размера", "$90 - $200", "Идеальна сумка на плечо или структурированная кожаная модель нейтрального оттенка.")
+    )
+
     val sampleWhatToAvoid = listOf(
         "Overly busy distracting patterns with stark visual contrasts that disrupt natural outfits.",
         "Very cold saturated neon accents which block the warmth of soft autumn tones.",
         "Draped oversized layering that isn't balanced by structured anchoring details like high-waisted folds."
+    )
+
+    val sampleWhatToAvoidRu = listOf(
+        "Слишком броские, контрастные принты, которые нарушают общую гармонию образа.",
+        "Очень холодные, кислотно-неоновые оттенки, которые диссонируют с мягкой теплой гаммой.",
+        "Объемный оверсайз без акцента на талии или плечах."
     )
 
     val sampleStyleReport = StyleReport(
@@ -73,6 +134,16 @@ object MockData {
         wardrobeGaps = sampleWardrobeGaps,
         shoppingList = sampleShoppingItems,
         whatToAvoid = sampleWhatToAvoid
+    )
+
+    val sampleStyleReportRu = StyleReport(
+        id = "report_test",
+        colorPalette = sampleColorPaletteRu,
+        silhouettes = sampleSilhouettesRu,
+        styleDirections = sampleStyleDirectionsRu,
+        wardrobeGaps = sampleWardrobeGapsRu,
+        shoppingList = sampleShoppingItemsRu,
+        whatToAvoid = sampleWhatToAvoidRu
     )
 
     val sampleOutfitIdeas = listOf(

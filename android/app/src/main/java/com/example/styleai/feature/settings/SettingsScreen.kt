@@ -278,7 +278,10 @@ fun SettingsScreen(
         // About block with Version Tapper
         Spacer(modifier = Modifier.height(10.dp))
         Text(
-            text = "App Version: 1.0.0-MVP (Build version - Tap ${5 - tapsCount.coerceAtMost(5)} times for Dev Mode)",
+            text = if (currentLanguage == AppLanguage.EN) 
+                "App Version: 1.0.0-MVP (Build version - Tap ${5 - tapsCount.coerceAtMost(5)} times for Dev Mode)"
+            else 
+                "Версия приложения: 1.0.0-MVP (Сборка - нажмите ${5 - tapsCount.coerceAtMost(5)} раз(а) для режима разработчика)",
             textAlign = TextAlign.Center,
             fontSize = 11.sp,
             color = Color.Gray,
